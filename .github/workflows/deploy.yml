@@ -99,29 +99,10 @@ jobs:
 
       - name: support Github Page - handle html with no .html
         run: |
-          echo "api/** text/html" > ./_site/.gitattributes
-      #     root="./_site/api"
-      #     find "$root" -type f \
-      #       ! -name "*.html" \
-      #       ! -name "*.png" | while read -r file; do
-      #         dir=$(dirname "$file")
-      #         base=$(basename "$file")
-      #         newdir="$dir/$base"
-      #         newfile="$newdir/index.html"
-          
-      #         tmpfile="${file}.tmp-move"
-          
-      #         mv "$file" "$tmpfile"
-          
-      #         if [ -f "$newdir" ]; then
-      #             mv "$newdir" "$newdir.bak"
-      #         fi
-          
-      #         mkdir -p "$newdir"
-      #         mv "$tmpfile" "$newfile"
-          
-      #         echo "$file -> $newfile"
-      #     done
+          find "./_site/api" -type f ! \( -name "*.html" -o -name "*.png" \) | while read -r file; do
+            newfile="${file}.html"
+            mv -v "$file" "$newfile"
+          done
 
       - name: support Github Page - Redirect file
         run: |
