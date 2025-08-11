@@ -6,62 +6,62 @@ on:
   workflow_dispatch:
 
 jobs:
-  check-update:
-    name: Check for docs updates
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    outputs:
-      updated: ${{ steps.check.outputs.updated }}
-      latest_hash: ${{ steps.fetch.outputs.hash }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+  # check-update:
+  #   name: Check for docs updates
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/main'
+  #   outputs:
+  #     updated: ${{ steps.check.outputs.updated }}
+  #     latest_hash: ${{ steps.fetch.outputs.hash }}
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
 
-      - name: Stop if this is a fork
-        run: |
-          if [ "${GITHUB_REPOSITORY}" != "FBIKdot/deno-docs" ]; then
-            echo "This is a fork or different repository. Skipping workflow."
-            exit 0
-          fi
+  #     - name: Stop if this is a fork
+  #       run: |
+  #         if [ "${GITHUB_REPOSITORY}" != "FBIKdot/deno-docs" ]; then
+  #           echo "This is a fork or different repository. Skipping workflow."
+  #           exit 0
+  #         fi
 
-      - name: Get latest commit hash from denoland/docs
-        id: fetch
-        run: |
-          LATEST_HASH=$(git ls-remote https://github.com/denoland/docs.git refs/heads/main | cut -f1)
-          echo "hash=$LATEST_HASH" >> $GITHUB_OUTPUT
+  #     - name: Get latest commit hash from denoland/docs
+  #       id: fetch
+  #       run: |
+  #         LATEST_HASH=$(git ls-remote https://github.com/denoland/docs.git refs/heads/main | cut -f1)
+  #         echo "hash=$LATEST_HASH" >> $GITHUB_OUTPUT
 
-      - name: Compare with local last-commit-hash.txt
-        id: check
-        run: |
-          if [ ! -f last-commit-hash.txt ]; then
-            echo "No local record found."
-            echo "updated=true" >> $GITHUB_OUTPUT
-          else
-            LOCAL_HASH=$(cat last-commit-hash.txt)
-            if [ "$LOCAL_HASH" != "${{ steps.fetch.outputs.hash }}" ]; then
-              echo "Docs have been updated."
-              echo "updated=true" >> $GITHUB_OUTPUT
-            else
-              echo "No updates found."
-              echo "updated=false" >> $GITHUB_OUTPUT
-            fi
-          fi
+  #     - name: Compare with local last-commit-hash.txt
+  #       id: check
+  #       run: |
+  #         if [ ! -f last-commit-hash.txt ]; then
+  #           echo "No local record found."
+  #           echo "updated=true" >> $GITHUB_OUTPUT
+  #         else
+  #           LOCAL_HASH=$(cat last-commit-hash.txt)
+  #           if [ "$LOCAL_HASH" != "${{ steps.fetch.outputs.hash }}" ]; then
+  #             echo "Docs have been updated."
+  #             echo "updated=true" >> $GITHUB_OUTPUT
+  #           else
+  #             echo "No updates found."
+  #             echo "updated=false" >> $GITHUB_OUTPUT
+  #           fi
+  #         fi
 
-      - name: Save latest commit hash
-        if: steps.check.outputs.updated == 'true'
-        run: |
-          echo "${{ steps.fetch.outputs.hash }}" > last-commit-hash.txt
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+  #     - name: Save latest commit hash
+  #       if: steps.check.outputs.updated == 'true'
+  #       run: |
+  #         echo "${{ steps.fetch.outputs.hash }}" > last-commit-hash.txt
+  #         git config --global user.name 'github-actions[bot]'
+  #         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           
-          git add last-commit-hash.txt
-          git commit -m "Update last-commit-hash.txt"
-          git push
+  #         git add last-commit-hash.txt
+  #         git commit -m "Update last-commit-hash.txt"
+  #         git push
 
   build-docs:
     name: Build & Deploy
-    needs: check-update
-    if: needs.check-update.outputs.updated == 'true'
+    # needs: check-update
+    # if: needs.check-update.outputs.updated == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -97,6 +97,36 @@ jobs:
       - name: Replace domain
         run: find _site -type f -exec sed -i 's|docs\.deno\.com|fbikdot.github.io/deno-docs|g' {} +
 
+      - name: support Github Page - handle html with no .html
+      - run: |
+          root="./_site/api"
+          find "$root" -type f \
+            ! -name "*.html" \
+            ! -name "*.png" | while read -r file; do
+              dir=$(dirname "$file")
+              base=$(basename "$file")
+              newdir="$dir/$base"
+              newfile="$newdir/index.html"
+          
+              tmpfile="${file}.tmp-move"
+          
+              mv "$file" "$tmpfile"
+          
+              if [ -f "$newdir" ]; then
+                  mv "$newdir" "$newdir.bak"
+              fi
+          
+              mkdir -p "$newdir"
+              mv "$tmpfile" "$newfile"
+          
+              echo "$file -> $newfile"
+          done
+      - name: support Github Page - Redirect file
+        run: |
+          echo "<meta http-equiv=\"refresh\" content=\"0; url=./runtime/">" > ./_site/index.html
+          echo "<meta http-equiv=\"refresh\" content=\"0; url=./deno/~/Deno\">" > ./_site/api/index.html
+          mv ./_site/404/index.html ./_site/404.html
+          
       - name: Upload to GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
