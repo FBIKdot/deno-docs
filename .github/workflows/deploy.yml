@@ -123,7 +123,7 @@ jobs:
           done
       - name: support Github Page - Redirect file
         run: |
-          echo "<meta http-equiv=\"refresh\" content=\"0; url=./runtime/">" > ./_site/index.html
+          echo "<meta http-equiv=\"refresh\" content=\"0; url=./runtime/\">" > ./_site/index.html
           echo "<meta http-equiv=\"refresh\" content=\"0; url=./deno/~/Deno\">" > ./_site/api/index.html
           mv ./_site/404/index.html ./_site/404.html
           
