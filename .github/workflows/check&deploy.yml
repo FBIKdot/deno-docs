@@ -98,7 +98,7 @@ jobs:
         run: find _site -type f -exec sed -i 's|docs\.deno\.com|fbikdot.github.io/deno-docs|g' {} +
 
       - name: support Github Page - handle html with no .html
-      - run: |
+        run: |
           root="./_site/api"
           find "$root" -type f \
             ! -name "*.html" \
