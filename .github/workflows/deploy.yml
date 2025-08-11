@@ -1,4 +1,4 @@
-name: Daily Docs Sync & Deploy
+name: Deploy
 
 on:
   schedule:
