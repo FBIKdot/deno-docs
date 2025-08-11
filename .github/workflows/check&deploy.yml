@@ -1,4 +1,4 @@
-name: Docs update check & Deploy
+name: Daily Docs Sync & Deploy
 
 on:
   schedule:
@@ -63,6 +63,11 @@ jobs:
     needs: check-update
     if: needs.check-update.outputs.updated == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+      
     steps:
       - name: Checkout denoland/docs
         uses: actions/checkout@v4
